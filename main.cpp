@@ -5,6 +5,8 @@
 #include <windows.h>
 #include <stdio.h>
 #include <algorithm>
+#include <string>
+#include <sstream>
 
 #include "tabla"
 #include "map"
@@ -209,7 +211,6 @@ int main(){
     while(1){
         string el;
         string i2;
-        string nombrestr;
         int numero;
         cin >> el;
         system("cls");
@@ -223,36 +224,99 @@ int main(){
                 el[n] = tolower(el[n], loc);
             if(simbolo.find(el) != simbolo.end()){ //esta en simbolo
                 numero = simbolo[el];
-                nombrestr = simbolo.find(el) -> second;
             }
             else if(nombre.find(el) != nombre.end()){ //esta en nombre
                 numero = nombre[el];
-                nombrestr = nombre.find(el) -> first;
             }
             else{
                 cout << "No se ha encontrado \"" << i2 << "\"." << endl;
                 continue;
             }
         }
-        nombrestr[0] = toupper(nombrestr[0], loc);
+
+        int f_size;
+
         string elem = tabla["order"][numero - 1];
-        vector<string> vec = split(bohr(tabla[elem]["number"]), '\n');
         gotoxy(1, 1);
-        cout << "Nombre: " << nombrestr;
+        cout << "Nombre: " << ReplaceAll(tabla[elem]["name"], "\"", "");
         gotoxy(45, 1);
-        cout << "Masa atomica: " << tabla[elem]["atomic_mass"];
+        cout << "Masa atomica: " << to_string(tabla[elem]["atomic_mass"]).substr(0, 7);
         gotoxy(1, 3);
-        cout << "Fusion: " << celsius(tabla[elem]["melt"]);
-        ::printf("%cC", 167);
+        try{
+            cout << fixed;
+            cout.precision(1);
+            cout << "Fusion: " << celsius(tabla[elem]["melt"]);
+            ::printf("%cC", 167);
+            stringstream sstream;
+            sstream << fixed;
+            sstream.precision(2);
+            double aux = celsius(tabla[elem]["melt"]);
+            sstream << "Fusion: " << aux << "oo";
+            f_size = sstream.str().size();
+            //f_size = string("Fusion: " + to_string(celsius(tabla[elem]["melt"]) + "oC")).size();
+        }
+        catch(...){
+            cout << "Indefinido";
+            f_size = 18;
+        }
         gotoxy(45, 3);
-        cout << "Ebullicion: " << celsius(tabla[elem]["boil"]);
-        ::printf("%cC", 167);
-        //creacion de cajas
-        caja(0, 0, string("Nombre: " + nombrestr).size() + 2, 3);
+        try{
+            cout << "Ebullicion: " << to_string(celsius(tabla[elem]["boil"])).substr(0, 7);
+            ::printf("%cC", 167);
+        }
+        catch(...){
+            cout << "Indefinido";
+        }
+        gotoxy(27, 1);
+        cout << "Simbolo: " << ReplaceAll(tabla[elem]["symbol"], "\"", "");
+        gotoxy(27, 3);
+        cout << "Numero: " << tabla[elem]["number"];
+        vector<string> vec = split(bohr(tabla[elem]["number"]), '\n');
         for(int n = 0; n != vec.size(); n++){
             gotoxy(1, 5 + n);
             cout << vec[n] << endl;
         }
-        //caja(0, 0, 67, 5);
+
+        vector<string> conf = split(ReplaceAll(tabla[elem]["electron_configuration"], "\"", ""), ' ');
+        gotoxy(1, 9);
+        cout << "Configuracion: ";
+        int skip = 0;
+        for(int n = 0; n != conf.size(); n++){
+            if(n == 12){
+                gotoxy(1, 10);
+                skip = 1;
+                cout << "               ";
+            }
+            cout << conf[n] << " ";
+        }
+        gotoxy(1, 10 + skip);
+        cout << "Configuracion(kernel): " << ReplaceAll(tabla[elem]["electron_configuration_semantic"], "\"", "");
+        //creacion de cajas
+        int aux;
+        int aux2;
+        aux = string("Nombre: " + ReplaceAll(tabla[elem]["name"], "\"", "")).size();
+        if(aux >= f_size){
+            caja(0, 0, aux + 2, 3); // Nombre
+            caja(0, 2, aux + 2, 3); // Fusion
+        }
+        else{
+            caja(0, 0, f_size + 2, 3); // Nombre
+            caja(0, 2, f_size + 2, 3); // Fusion
+        }
+        aux = string("Simbolo: " + ReplaceAll(tabla[elem]["symbol"], "\"", "")).size();
+        aux2 = string("Numero: " + to_string(tabla[elem]["number"])).size();
+        if(aux >= aux2){
+            caja(26, 0, aux + 2, 3); // simbolo
+            caja(26, 2, aux + 2, 3); // numero
+        }
+        else{
+            caja(26, 0, aux2 + 2, 3); // simbolo
+            caja(26, 2, aux2 + 2, 3); // numero
+        }
+        caja(44, 0, 23, 3);
+        caja(44, 2, 23, 3);
+        caja(0, 0, 67, 9); // marco
+        caja(0, 4, 67, 5); // bohr
+
     }
 }
