@@ -70,10 +70,19 @@ string bohr(int electrones){
         else{
             if(electrones <= 8)
                 configuracion[n] = electrones;
-            else{
+            else if(electrones == bohr[n]){
+                configuracion[n] = bohr[n] - 1;
+                configuracion[n + 1] = 1;
+            }
+            else if(electrones - 8 == bohr[n]){
                 configuracion[n + 1] = 8;
                 electrones -= 8;
                 configuracion[n] = electrones;
+            }
+            else{
+                configuracion[n] = 8;
+                electrones -= 8;
+                configuracion[n + 1] = electrones;
             }
             break;
         }
@@ -194,9 +203,9 @@ void caja(int x_pos, int y_pos, int dim_x, int dim_y){
     ::printf("%c", caracter(circ));
 }
 
-std::string ReplaceAll(std::string str, const std::string& from, const std::string& to) {
+string ReplaceAll(string str, const string& from, const string& to) {
     size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+    while((start_pos = str.find(from, start_pos)) != string::npos) {
         str.replace(start_pos, from.length(), to);
         start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
     }
@@ -204,6 +213,39 @@ std::string ReplaceAll(std::string str, const std::string& from, const std::stri
 }
 
 inline double celsius(double k){return k - 273.15;}
+
+string nummagneticos(int* buf, string conf){
+    //0: n, 1: l, 2: m
+    int nivel = stoi(conf);
+    char letra = conf[1];
+    int azimuto;
+    int magnetico;
+    int subindice = stoi(conf.substr(2));
+    buf[0] = nivel;
+    if(letra == 's'){
+        azimuto = 0;
+        magnetico = 1;
+    }
+    else if(letra == 'p'){
+        azimuto = 1;
+        magnetico = 3;
+    }
+    else if(letra == 'd'){
+        azimuto = 2;
+        magnetico = 5;
+    }
+    else{
+        azimuto = 2;
+        magnetico = 7;
+    }
+    buf[1] = azimuto;
+    buf[2] = magnetico;
+
+    if(subindice <= magnetico)
+        return "+1/2";
+    return "-1/2";
+
+}
 
 int main(){
     hidecursor();
@@ -218,9 +260,11 @@ int main(){
         locale loc;
         try{
             numero = stoi(el);
+            if(numero == 0 || numero > 119)
+                throw invalid_argument("");
         }
         catch(...){
-            for(int n = 0; n != el.size(); n++)
+            for(unsigned int n = 0; n != el.size(); n++)
                 el[n] = tolower(el[n], loc);
             if(simbolo.find(el) != simbolo.end()){ //esta en simbolo
                 numero = simbolo[el];
@@ -253,7 +297,6 @@ int main(){
             double aux = celsius(tabla[elem]["melt"]);
             sstream << "Fusion: " << aux << "oo";
             f_size = sstream.str().size();
-            //f_size = string("Fusion: " + to_string(celsius(tabla[elem]["melt"]) + "oC")).size();
         }
         catch(...){
             cout << "Indefinido";
@@ -272,7 +315,7 @@ int main(){
         gotoxy(27, 3);
         cout << "Numero: " << tabla[elem]["number"];
         vector<string> vec = split(bohr(tabla[elem]["number"]), '\n');
-        for(int n = 0; n != vec.size(); n++){
+        for(unsigned int n = 0; n != vec.size(); n++){
             gotoxy(1, 5 + n);
             cout << vec[n] << endl;
         }
@@ -281,7 +324,7 @@ int main(){
         gotoxy(1, 9);
         cout << "Configuracion: ";
         int skip = 0;
-        for(int n = 0; n != conf.size(); n++){
+        for(unsigned int n = 0; n != conf.size(); n++){
             if(n == 12){
                 gotoxy(1, 10);
                 skip = 1;
@@ -291,6 +334,16 @@ int main(){
         }
         gotoxy(1, 10 + skip);
         cout << "Configuracion(kernel): " << ReplaceAll(tabla[elem]["electron_configuration_semantic"], "\"", "");
+        gotoxy(1, 12 + skip);
+        int buf[3];
+        string NMS;
+
+        string auxstr = tabla[elem]["config"];
+        vector<string> auxvec;
+        auxvec = split(auxstr, ' ');
+        NMS = nummagneticos(buf, auxvec[auxvec.size() - 2]);
+        //0: n, 1: l, 2: m
+        cout << "N:\t"<< buf[0] << "\tL:\t" << buf[1] << "\tM:\t" << buf[2] << "\tS:\t" << NMS;
         //creacion de cajas
         int aux;
         int aux2;
@@ -313,10 +366,12 @@ int main(){
             caja(26, 0, aux2 + 2, 3); // simbolo
             caja(26, 2, aux2 + 2, 3); // numero
         }
-        caja(44, 0, 23, 3);
-        caja(44, 2, 23, 3);
-        caja(0, 0, 67, 9); // marco
+        caja(44, 0, 23, 3); // masa atomica
+        caja(44, 2, 23, 3); // ebullicion
+        caja(0, 0, 67, 12 + skip); // marco
         caja(0, 4, 67, 5); // bohr
-
+        caja(0, 11 + skip, 67, 3); // numeros magneticos
+        caja(15, 11 + skip, 17, 3); // NM: L
+        caja(31, 11 + skip, 17, 3); // NM: M
     }
 }
