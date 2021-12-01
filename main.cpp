@@ -17,6 +17,22 @@ struct uint4{
     unsigned val : 4;
 };
 
+void SetWindow(int Width, int Height) {
+    _COORD coord;
+    coord.X = Width;
+    coord.Y = Height;
+
+    _SMALL_RECT Rect;
+    Rect.Top = 0;
+    Rect.Left = 0;
+    Rect.Bottom = Height - 1;
+    Rect.Right = Width - 1;
+
+    HANDLE Handle = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleWindowInfo(Handle, TRUE, &Rect);
+    SetConsoleScreenBufferSize(Handle, coord);
+}
+
 unsigned char getcharat(short x, short y){
     CHAR_INFO ci;
     COORD xy = {0, 0};
@@ -25,11 +41,11 @@ unsigned char getcharat(short x, short y){
     return ReadConsoleOutput(GetStdHandle(STD_OUTPUT_HANDLE),&ci,c,xy, &rect) ? ci.Char.AsciiChar : '\0';
 }
 
-void hidecursor(){
+void hidecursor(bool hide = true){
    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
    CONSOLE_CURSOR_INFO info;
-   info.dwSize = 100;
-   info.bVisible = FALSE;
+   info.dwSize = 10;
+   info.bVisible = !hide;
    SetConsoleCursorInfo(consoleHandle, &info);
 }
 
@@ -62,28 +78,34 @@ void gotoxy(int x,int y){
 string bohr(int electrones){
     int configuracion[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     const int bohr[8] = {2, 8, 18, 32, 32, 18, 8, 2};
-    for(int n = 0; electrones > 0; n++){
-        if(electrones - bohr[n] > 0){
-            electrones -= bohr[n];
+    /*for(int n = 0; electrones > 0; n++){
+        if(electrones > bohr[n]){
             configuracion[n] = bohr[n];
+            electrones -= bohr[n];
+        }
+        else if(electrones <= 8){
+            configuracion[n] = electrones;
+            break;
         }
         else{
-            if(electrones <= 8)
-                configuracion[n] = electrones;
-            else if(electrones == bohr[n]){
-                configuracion[n] = bohr[n] - 1;
-                configuracion[n + 1] = 1;
+            configuracion[n] = 8;
+            configuracion[n + 1] = electrones - 8;
+            int aux, aux2;
+            aux = configuracion[n];
+            aux2 = configuracion[n + 1];
+            if(aux2 > aux){
+                configuracion[n] = aux2;
+                configuracion[n + 1] = aux;
             }
-            else if(electrones - 8 == bohr[n]){
-                configuracion[n + 1] = 8;
-                electrones -= 8;
-                configuracion[n] = electrones;
-            }
-            else{
-                configuracion[n] = 8;
-                electrones -= 8;
-                configuracion[n + 1] = electrones;
-            }
+            break;
+        }
+    }*/
+    string nombre = tabla["order"][electrones - 1];
+    for(int n = 0; n != 8 ; n++){
+        try{
+            configuracion[n] = tabla[nombre]["shells"][n];
+        }
+        catch(...){
             break;
         }
     }
@@ -212,8 +234,6 @@ string ReplaceAll(string str, const string& from, const string& to) {
     return str;
 }
 
-inline double celsius(double k){return k - 273.15;}
-
 string nummagneticos(int* buf, string conf){
     //0: n, 1: l, 2: m
     int nivel = stoi(conf);
@@ -247,14 +267,18 @@ string nummagneticos(int* buf, string conf){
 
 }
 
+inline double celsius(double k){return k - 273.15;}
+
 int main(){
-    hidecursor();
+    SetWindow(67, 16);
+    cout << "\t\t         Seleccion: ";
 
     while(1){
         string el;
         string i2;
         int numero;
         cin >> el;
+        hidecursor();
         system("cls");
         i2 = el;
         locale loc;
@@ -320,6 +344,7 @@ int main(){
             cout << vec[n] << endl;
         }
 
+        //vector<string> conf = split(ReplaceAll(tabla[elem]["config"], "\"", ""), ' ');
         vector<string> conf = split(ReplaceAll(tabla[elem]["electron_configuration"], "\"", ""), ' ');
         gotoxy(1, 9);
         cout << "Configuracion: ";
@@ -333,15 +358,15 @@ int main(){
             cout << conf[n] << " ";
         }
         gotoxy(1, 10 + skip);
+        //cout << "Configuracion(kernel): " << ReplaceAll(tabla[elem]["config_kernel"], "\"", "");
         cout << "Configuracion(kernel): " << ReplaceAll(tabla[elem]["electron_configuration_semantic"], "\"", "");
         gotoxy(1, 12 + skip);
         int buf[3];
         string NMS;
-
-        string auxstr = tabla[elem]["config"];
+        string auxstr = tabla[elem]["electron_configuration"];
         vector<string> auxvec;
         auxvec = split(auxstr, ' ');
-        NMS = nummagneticos(buf, auxvec[auxvec.size() - 2]);
+        NMS = nummagneticos(buf, auxvec.back());
         //0: n, 1: l, 2: m
         cout << "N:\t"<< buf[0] << "\tL:\t" << buf[1] << "\tM:\t" << buf[2] << "\tS:\t" << NMS;
         //creacion de cajas
@@ -373,5 +398,11 @@ int main(){
         caja(0, 11 + skip, 67, 3); // numeros magneticos
         caja(15, 11 + skip, 17, 3); // NM: L
         caja(31, 11 + skip, 17, 3); // NM: M
+
+        SetWindow(67, 15 + skip);
+        SetWindow(67, 15 + skip);
+        gotoxy(27, 14 + skip);
+        cout << "Seleccion: ";
+        hidecursor(false);
     }
 }
