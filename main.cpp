@@ -11,6 +11,8 @@
 #include "tabla"
 #include "map"
 
+#define DB
+
 using namespace std;
 
 struct uint4{
@@ -78,7 +80,8 @@ void gotoxy(int x,int y){
 string bohr(int electrones){
     int configuracion[8] = {0, 0, 0, 0, 0, 0, 0, 0};
     const int bohr[8] = {2, 8, 18, 32, 32, 18, 8, 2};
-    /*for(int n = 0; electrones > 0; n++){
+    #ifndef DB
+    for(int n = 0; electrones > 0; n++){
         if(electrones > bohr[n]){
             configuracion[n] = bohr[n];
             electrones -= bohr[n];
@@ -99,7 +102,9 @@ string bohr(int electrones){
             }
             break;
         }
-    }*/
+    }
+    #endif // DB
+    #ifdef DB
     string nombre = tabla["order"][electrones - 1];
     for(int n = 0; n != 8 ; n++){
         try{
@@ -109,6 +114,7 @@ string bohr(int electrones){
             break;
         }
     }
+    #endif // DB
     return fmt::format("\t\\\t \\\t \\\t \\\t \\\t \\\t \\\t \\\n@\t{0}\t {1}\t {2}\t {3}\t {4}\t {5}\t {6}\t {7}\n\t/\t /\t /\t /\t /\t /\t /\t /", configuracion[0], configuracion[1], configuracion[2], configuracion[3], configuracion[4], configuracion[5], configuracion[6], configuracion[7]);
 }
 
@@ -240,28 +246,60 @@ string nummagneticos(int* buf, string conf){
     char letra = conf[1];
     int azimuto;
     int magnetico;
+    int aux;
     int subindice = stoi(conf.substr(2));
     buf[0] = nivel;
     if(letra == 's'){
         azimuto = 0;
-        magnetico = 1;
+        magnetico = 0;
+        aux = 1;
     }
     else if(letra == 'p'){
         azimuto = 1;
-        magnetico = 3;
+        if(subindice == 1 || subindice == 4)
+            magnetico = -1;
+        else if(subindice == 2 || subindice == 5)
+            magnetico = 0;
+        else
+            magnetico = 1;
+        aux = 3;
     }
     else if(letra == 'd'){
         azimuto = 2;
-        magnetico = 5;
+        if(subindice == 1 || subindice == 6)
+            magnetico = -2;
+        else if(subindice == 2 || subindice == 7)
+            magnetico = -1;
+        else if(subindice == 3 || subindice == 8)
+            magnetico = 0;
+        else if(subindice == 4 || subindice == 9)
+            magnetico = 1;
+        else
+            magnetico = 2;
+        aux = 5;
     }
     else{
-        azimuto = 2;
-        magnetico = 7;
+        azimuto = 3;
+        if(subindice == 1 || subindice == 8)
+            magnetico = -3;
+        else if(subindice == 2 || subindice == 9)
+            magnetico = -2;
+        else if(subindice == 3 || subindice == 10)
+            magnetico = -1;
+        else if(subindice == 4 || subindice == 11)
+            magnetico = 0;
+        else if(subindice == 5 || subindice == 12)
+            magnetico = 1;
+        else if(subindice == 6 || subindice == 13)
+            magnetico = 2;
+        else
+            magnetico = 3;
+        aux = 7;
     }
     buf[1] = azimuto;
     buf[2] = magnetico;
 
-    if(subindice <= magnetico)
+    if(subindice <= aux)
         return "+1/2";
     return "-1/2";
 
@@ -344,8 +382,12 @@ int main(){
             cout << vec[n] << endl;
         }
 
-        //vector<string> conf = split(ReplaceAll(tabla[elem]["config"], "\"", ""), ' ');
+        #ifndef DB
+        vector<string> conf = split(ReplaceAll(tabla[elem]["config"], "\"", ""), ' ');
+        #endif // DB
+        #ifdef DB
         vector<string> conf = split(ReplaceAll(tabla[elem]["electron_configuration"], "\"", ""), ' ');
+        #endif // DB
         gotoxy(1, 9);
         cout << "Configuracion: ";
         int skip = 0;
@@ -358,12 +400,24 @@ int main(){
             cout << conf[n] << " ";
         }
         gotoxy(1, 10 + skip);
-        //cout << "Configuracion(kernel): " << ReplaceAll(tabla[elem]["config_kernel"], "\"", "");
+        #ifndef DB
+        cout << "Configuracion(kernel): " << ReplaceAll(tabla[elem]["config_kernel"], "\"", "");
+        #endif // DB
+        #ifdef DB
         cout << "Configuracion(kernel): " << ReplaceAll(tabla[elem]["electron_configuration_semantic"], "\"", "");
+        #endif // DB
         gotoxy(1, 12 + skip);
         int buf[3];
         string NMS;
-        string auxstr = tabla[elem]["electron_configuration"];
+        string auxstr;
+
+        #ifndef DB
+        auxstr = tabla[elem]["config"];
+        #endif // DB
+        #ifdef DB
+        auxstr = tabla[elem]["electron_configuration"];
+        #endif // DB
+
         vector<string> auxvec;
         auxvec = split(auxstr, ' ');
         NMS = nummagneticos(buf, auxvec.back());
