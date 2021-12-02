@@ -79,8 +79,8 @@ void gotoxy(int x,int y){
 
 string bohr(int electrones){
     int configuracion[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-    const int bohr[8] = {2, 8, 18, 32, 32, 18, 8, 2};
     #ifndef DB
+    const int bohr[8] = {2, 8, 18, 32, 32, 18, 8, 2};
     for(int n = 0; electrones > 0; n++){
         if(electrones > bohr[n]){
             configuracion[n] = bohr[n];
@@ -247,7 +247,7 @@ string nummagneticos(int* buf, string conf){
     int azimuto;
     int magnetico;
     int aux;
-    int subindice = stoi(conf.substr(2));
+    int nelectrones = stoi(conf.substr(2));
     buf[0] = nivel;
     if(letra == 's'){
         azimuto = 0;
@@ -256,9 +256,9 @@ string nummagneticos(int* buf, string conf){
     }
     else if(letra == 'p'){
         azimuto = 1;
-        if(subindice == 1 || subindice == 4)
+        if(nelectrones == 1 || nelectrones == 4)
             magnetico = -1;
-        else if(subindice == 2 || subindice == 5)
+        else if(nelectrones == 2 || nelectrones == 5)
             magnetico = 0;
         else
             magnetico = 1;
@@ -266,13 +266,13 @@ string nummagneticos(int* buf, string conf){
     }
     else if(letra == 'd'){
         azimuto = 2;
-        if(subindice == 1 || subindice == 6)
+        if(nelectrones == 1 || nelectrones == 6)
             magnetico = -2;
-        else if(subindice == 2 || subindice == 7)
+        else if(nelectrones == 2 || nelectrones == 7)
             magnetico = -1;
-        else if(subindice == 3 || subindice == 8)
+        else if(nelectrones == 3 || nelectrones == 8)
             magnetico = 0;
-        else if(subindice == 4 || subindice == 9)
+        else if(nelectrones == 4 || nelectrones == 9)
             magnetico = 1;
         else
             magnetico = 2;
@@ -280,17 +280,17 @@ string nummagneticos(int* buf, string conf){
     }
     else{
         azimuto = 3;
-        if(subindice == 1 || subindice == 8)
+        if(nelectrones == 1 || nelectrones == 8)
             magnetico = -3;
-        else if(subindice == 2 || subindice == 9)
+        else if(nelectrones == 2 || nelectrones == 9)
             magnetico = -2;
-        else if(subindice == 3 || subindice == 10)
+        else if(nelectrones == 3 || nelectrones == 10)
             magnetico = -1;
-        else if(subindice == 4 || subindice == 11)
+        else if(nelectrones == 4 || nelectrones == 11)
             magnetico = 0;
-        else if(subindice == 5 || subindice == 12)
+        else if(nelectrones == 5 || nelectrones == 12)
             magnetico = 1;
-        else if(subindice == 6 || subindice == 13)
+        else if(nelectrones == 6 || nelectrones == 13)
             magnetico = 2;
         else
             magnetico = 3;
@@ -299,7 +299,7 @@ string nummagneticos(int* buf, string conf){
     buf[1] = azimuto;
     buf[2] = magnetico;
 
-    if(subindice <= aux)
+    if(nelectrones <= aux)
         return "+1/2";
     return "-1/2";
 
@@ -322,7 +322,7 @@ int main(){
         locale loc;
         try{
             numero = stoi(el);
-            if(numero == 0 || numero > 119)
+            if(numero <= 0 || numero >= 120)
                 throw invalid_argument("");
         }
         catch(...){
@@ -336,6 +336,8 @@ int main(){
             }
             else{
                 cout << "No se ha encontrado \"" << i2 << "\"." << endl;
+                cout << "\t\t         Seleccion: ";
+                hidecursor(false);
                 continue;
             }
         }
